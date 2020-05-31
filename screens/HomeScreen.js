@@ -7,7 +7,7 @@ import React, { Component } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios'
 import { MonoText } from '../components/StyledText';
-const APIKey = require('../clientId.json').googleAPI
+const APIKey = require('../clientId.json').API_key
 export default class HomeScreen extends Component {
   constructor(props) {
     super(props);
@@ -35,6 +35,7 @@ export default class HomeScreen extends Component {
     let imageData = await ImagePicker.launchImageLibraryAsync({
       base64:true
     })
+    console.log(imageData.base64)
 
     this.handleImage(imageData);
   }
@@ -43,16 +44,31 @@ export default class HomeScreen extends Component {
     try {
       if (!imageData.cancelled) {
         //do things
-        const data = await axios.post(
+        const data = (await axios.post(
           `https://us-vision.googleapis.com/v1/images:annotate?key=${APIKey}`,
-          imageData,
+          {
+            "requests":[
+              {
+                "image":{
+                  "content":imageData.base64
+                },
+                "features":[
+                  {
+                    "type":"TEXT_DETECTION",
+                    // "maxResults":1
+                  }
+                ]
+              }
+            ]
+          },
           {
             headers: {
-              Accept: 'application/json',
+              "Accept": 'application/json',
               'Content-Type': 'application/json',
             }}
-          )
-          console.log(data)
+          )).data
+          const text = data.responses[0].fullTextAnnotation.text
+          console.log(text)
       }
     } catch (err) {
       console.error(err);
